@@ -95,11 +95,11 @@ while true; do
             pan=$(awk -v z="$ZOOM" -v f="$PAN_FACTOR" 'BEGIN { printf "%.15f", z*f }')
 
             case "$seq" in
-                "[A") # flèche haut -> monter (y augmente)
-                    CENTER_Y=$(awk -v cy="$CENTER_Y" -v p="$pan" 'BEGIN { printf "%.15f", cy + p }')
-                    ;;
-                "[B") # flèche bas -> descendre (y diminue)
+                "[A") # flèche haut -> monter (y diminue)
                     CENTER_Y=$(awk -v cy="$CENTER_Y" -v p="$pan" 'BEGIN { printf "%.15f", cy - p }')
+                    ;;
+                "[B") # flèche bas -> descendre (y augmente)
+                    CENTER_Y=$(awk -v cy="$CENTER_Y" -v p="$pan" 'BEGIN { printf "%.15f", cy + p }')
                     ;;
                 "[C") # flèche droite -> aller vers la droite (x augmente)
                     CENTER_X=$(awk -v cx="$CENTER_X" -v p="$pan" 'BEGIN { printf "%.15f", cx + p }')
