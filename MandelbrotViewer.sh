@@ -4,6 +4,7 @@
 W=${1:-160}        # largeur en caractères
 H=${2:-48}         # hauteur en lignes
 MAX_ITER=${3:-800} # itérations Mandelbrot (monter pour plus de détails)
+RENDER_BIN=${RENDER_BIN:-./mandelbrot_render}
 
 # Centre initial (classique du Mandelbrot)
 CENTER_X=-0.75
@@ -32,47 +33,11 @@ draw() {
     # Se repositionner en haut à gauche
     tput cup 0 0
 
-    awk -v W="$w" -v H="$h" -v max_iter="$max_iter" \
-        -v cx="$cx" -v cy="$cy" -v zoom="$zoom" '
-    BEGIN {
-        # Définition de la fenêtre complexe pour ce zoom
-        xmin = cx - zoom;
-        xmax = cx + zoom;
-        ymin = cy - zoom * H / W;
-        ymax = cy + zoom * H / W;
+    "$RENDER_BIN" "$w" "$h" "$max_iter" "$cx" "$cy" "$zoom"
 
-        for (py = 0; py < H; py++) {
-            for (px = 0; px < W; px++) {
-
-                # Coordonnées complexes correspondant au point (px, py)
-                x0 = xmin + (xmax - xmin) * px / W;
-                y0 = ymin + (ymax - ymin) * py / H;
-
-                x = 0; y = 0; iter = 0;
-                while (x*x + y*y <= 4 && iter < max_iter) {
-                    xt = x*x - y*y + x0;
-                    y  = 2*x*y + y0;
-                    x  = xt;
-                    iter++;
-                }
-
-                if (iter == max_iter) {
-                    color = 16;   # intérieur : noir
-                } else {
-                    # palette simple mais efficace
-                    color = 17 + int((iter / max_iter) * 200);
-                }
-
-                # bloc plein en couleur de fond
-                printf "\033[48;5;%dm \033[0m", color;
-            }
-            printf "\n";
-        }
-
-        # ligne d’info en bas
-        printf "cx=%.10f  cy=%.10f  zoom=%.10f  iter=%d  (flèches=pan, Espace=zoom, Backspace=dezoom, q=quit)\n",
-               cx, cy, zoom, max_iter;
-    }'
+    # ligne d’info en bas
+    printf "cx=%.10f  cy=%.10f  zoom=%.10f  iter=%d  (flèches=pan, Espace=zoom, Backspace=dezoom, q=quit)\n" \
+        "$cx" "$cy" "$zoom" "$max_iter"
 }
 
 cleanup() {
@@ -88,6 +53,14 @@ clear
 tput civis
 # désactiver l’echo pour ne pas afficher les touches
 stty -echo
+
+if [[ ! -x "$RENDER_BIN" ]]; then
+    tput cnorm
+    stty echo
+    echo "Renderer binaire introuvable: $RENDER_BIN"
+    echo "Compilez-le avec: make"
+    exit 1
+fi
 
 trap cleanup INT TERM
 
